@@ -12,12 +12,21 @@ when they are no longer needed. Name the responsible dependency explicitly and
 record any compatibility impact. Some entries describe packaging adaptations
 rather than pending bug fixes. Where no issue is linked, say so instead of
 implying that a fix is scheduled. Dependency status below was last reviewed on
-2026-10-19.
+2026-11-10.
 
 ## Renovate: Debian security package lookups
 
 - **Renovate tracking:** [issue #44330](https://github.com/renovatebot/renovate/issues/44330)
-  and [PR #35865](https://github.com/renovatebot/renovate/pull/35865), both open.
+  and [PR #35865](https://github.com/renovatebot/renovate/pull/35865), both open;
+  the PR is not merged.
+- **Review result (2026-11-10): keep.** Renovate's latest release,
+  [44.225.1](https://github.com/renovatebot/renovate/releases/tag/44.225.1), still
+  [selects gzip unconditionally](https://github.com/renovatebot/renovate/blob/44.225.1/lib/modules/datasource/deb/packages.ts).
+  Live requests to Bookworm security's `main/binary-amd64` and `main/binary-arm64`
+  indexes returned HTTP 404 for `Packages.gz` and HTTP 200 for `Packages.xz`.
+  Debian package-page version selectors still matched all 30 package/architecture
+  pairs in our dependency lists. This checks the website assumptions; it is not
+  an end-to-end hosted Renovate run.
 - **Problem:** the native `deb` datasource requests `Packages.gz`, but Bookworm
   security indexes are published as `Packages.xz`. Renovate skips the failed
   component and can report no updates even when a newer security package exists.
@@ -27,7 +36,7 @@ implying that a fix is scheduled. Dependency status below was last reviewed on
   inspect the HTML version heading, or the architecture's version table cell
   when Debian lists different binary rebuilds across architectures.
   This works with hosted Renovate and keeps Debian version ordering, existing
-  grouping, and manual merge review.
+  weekly grouping and the existing merge policy.
   Package details include security updates and version epochs; download filenames
   omit epochs and must not be used as the version source. Architecture-independent
   packages also resolve through the architecture-specific details URLs.
@@ -43,12 +52,24 @@ implying that a fix is scheduled. Dependency status below was last reviewed on
 
 ## Syft: readability of hash-based license references
 
-- **Syft tracking:** [issue #3527: Unable to classify complex licenses](https://github.com/anchore/syft/issues/3527).
+- **Syft tracking:** [issue #3527: Unable to classify complex licenses](https://github.com/anchore/syft/issues/3527) remains open.
   This [comment](https://github.com/anchore/syft/issues/3527#issuecomment-6295475239)
   discusses the usability of hash-based results.
   [PR #5448](https://github.com/anchore/syft/pull/5448), currently open, proposes
   more descriptive custom references for possible license matches below the
   configured coverage threshold.
+- **Review result (2026-11-10): keep the guidance and tracking.** The latest
+  [Syft release, v1.57.1](https://github.com/anchore/syft/releases/tag/v1.57.1),
+  matches our Dockerfile pin; PR #5448 remains unmerged. Scanning the local
+  generator filesystem with that version still produced hash-based custom
+  license references (96 extracted license definitions in the scan).
+  This entry describes a reporting limitation and notice-retrieval guidance,
+  not a local Syft patch that can be removed.
+- **Related Grant issues:** [#157](https://github.com/anchore/grant/issues/157)
+  (custom `LicenseRef` support) is closed, but that does not resolve descriptive
+  naming of hash-based references. [#217](https://github.com/anchore/grant/issues/217)
+  (option to ignore `licenseConcluded`) remains open. Both are referenced by
+  Syft PR #5448; neither provides a replacement for the guidance below.
 - **Problem:** complex Debian copyright notices can appear in license reports
   as hash-based custom references. The license evidence is retained, but a hash
   alone gives users little help understanding it.
