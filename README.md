@@ -263,8 +263,6 @@ package declaration does not copy notice files there.
 ## Further reading
 
 - [Architecture and implementation](ARCHITECTURE.md)
-- [Development and local checks](ARCHITECTURE.md#development)
-- [Generator releases and test builds](ARCHITECTURE.md#generator-release-and-test-builds)
 - [Dependency workarounds](WORKAROUNDS.md)
 
 ## License
