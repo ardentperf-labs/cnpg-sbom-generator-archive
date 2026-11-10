@@ -30,7 +30,7 @@
       "versioningTemplate": "docker"
     },
     {
-      "description": "updates the Taskfile, test files and GitHub Actions workflow dependencies",
+      "description": "Track container and tool versions in GitHub Actions workflows",
       "customType": "regex",
       "managerFilePatterns": [
         ".github/workflows/*.yml"
@@ -97,7 +97,6 @@
       "registryUrls": [
         "https://packages.debian.org/bookworm/amd64/{{packageName}}"
       ],
-      "groupName": "SBOM generator Debian and base image updates",
       "description": "Work around Renovate #44330 using Debian package pages; see WORKAROUNDS.md",
       "overrideDatasource": "custom.debian-bookworm",
       "versioning": "deb"
@@ -112,7 +111,6 @@
       "registryUrls": [
         "https://packages.debian.org/bookworm/arm64/{{packageName}}"
       ],
-      "groupName": "SBOM generator Debian and base image updates",
       "description": "Work around Renovate #44330 using Debian package pages; see WORKAROUNDS.md",
       "overrideDatasource": "custom.debian-bookworm",
       "versioning": "deb"
@@ -129,7 +127,6 @@
       "matchFileNames": [
         "Dockerfile"
       ],
-      "groupName": "SBOM generator Debian and base image updates",
       "allowedVersions": "/^\\d+\\.\\d+(?:\\.\\d+)?-slim-bookworm$/"
     },
     {
@@ -143,7 +140,6 @@
         "minor",
         "patch"
       ],
-      "groupName": "all github action",
       "pinDigests": true
     },
     {
@@ -166,6 +162,17 @@
       "rebaseWhen": "behind-base-branch"
     },
     {
+      "description": "Batch all generator and CI dependencies into one weekly PR",
+      "matchPackageNames": [
+        "*"
+      ],
+      "groupName": "SBOM generator dependencies",
+      "groupSlug": "sbom-generator-dependencies",
+      "separateMajorMinor": false,
+      "separateMinorPatch": false,
+      "separateMultipleMajor": false
+    },
+    {
       "description": "Require manual merging for major updates",
       "matchUpdateTypes": [
         "major"
@@ -180,5 +187,13 @@
         "($prefix := \"<h1>Package: {{{packageName}}} (\"; $headers := releases[$substring(version, 0, $length($prefix)) = $prefix]; $assert($count($headers) = 1, \"Expected one Debian package version heading\"); $archVersions := releases[$contains(version, \"<td class='vcurrent'>\")]; $assert($count($archVersions) <= 1, \"Expected at most one architecture version\"); $version := $count($archVersions) = 1 ? $substringBefore($substringAfter($archVersions[0].version, \">\"), \"<\") : $substringBefore($substringAfter($headers[0].version, $prefix), \")\"); $assert($contains($version, /^[0-9][0-9A-Za-z.+:~-]*$/), \"Invalid Debian package version\"); {\"releases\": [{\"version\": $version}]})"
       ]
     }
-  }
+  },
+  "timezone": "Etc/UTC",
+  "schedule": [
+    "* 0-5 * * 1"
+  ],
+  "updateNotScheduled": false,
+  "separateMajorMinor": false,
+  "separateMinorPatch": false,
+  "separateMultipleMajor": false
 }

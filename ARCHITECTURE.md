@@ -146,9 +146,8 @@ When publication is disabled, checks still run. With publication enabled:
 | Trigger | Result |
 | --- | --- |
 | Pull request | Checks only |
-| Push to `main` changing root Python files, `auto-publish-versions.env`, or `tests/**` | Publish or reuse commit image; promote the checked digest to `latest` |
-| Push to `main` changing only `Dockerfile` or `dependencies/**` | Checks only |
-| Workflow-only push to `main`, including Grype/Grant version bumps | Checks only |
+| Push to `main` changing root Python files, `Dockerfile`, `dependencies/**`, `auto-publish-versions.env`, `tests/**`, or `.github/workflows/**` | Publish or reuse commit image; promote the checked digest to `latest` |
+| Documentation-only or Renovate-configuration-only push to `main` | Checks only |
 | Manual dispatch, `publish=false`, `publish_latest=false` | Checks only |
 | Manual dispatch, `publish=true`, `publish_latest=false` | Publish or reuse commit image; promote to `test` |
 | Manual dispatch on `main`, `publish_latest=true` | Force a checked publication to `latest`, including runtime maintenance |
@@ -205,11 +204,27 @@ consumer builds and run their tests. Consumers can configure Renovate to track
 
 Renovate tracks the Python base-image digest, which covers its bundled Debian
 packages and pip. Additional Debian packages are tracked in architecture-specific
-`dependencies/debian-*.txt` files, grouped with that digest.
+`dependencies/debian-*.txt` files.
 `auto-publish-versions.env` pins Syft; the Dockerfile pins the `spdx-tools` Python
-dependency used for SPDX conformance validation. Renovate tracks both versions. Non-major generator
-updates automerge after their required checks pass; major updates require manual
-merging. Keep the Python base on Bookworm to match the Debian dependency lists.
+dependency used for SPDX conformance validation. Renovate also tracks CI actions,
+runners, and test tools.
+
+All tracked dependencies share one **SBOM generator dependencies** PR, including
+major updates. Renovate creates and updates the grouped branch only on Mondays
+from **00:00 to 06:00 UTC** (`* 0-5 * * 1`, `updateNotScheduled: false`). Existing
+branches wait for the next window for routine updates and rebases. Non-major
+batches retain automerge after required checks pass; a batch containing a major
+update requires manual merging. GitHub can complete automerge after the window
+closes.
+
+Each dependency batch builds and tests the generator on both architectures.
+After merging, all dependency changes—including Python, Debian packages,
+`spdx-tools`, and CI tools—trigger checked publication when publishing is enabled.
+There are no runtime-only publication exclusions. The window batches updates;
+it is not a hard limit of one CI run or publication per week. Updates within the
+window, rebases, and the merge to `main` can trigger additional runs.
+
+Keep the Python base on Bookworm to match the Debian dependency lists.
 New Debian dependencies must also be added to both architecture lists.
 The image revision label identifies the generator source commit. The SPDX
 document retains Syft's original name, creators, and license metadata.

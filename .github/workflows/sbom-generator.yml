@@ -49,6 +49,9 @@ jobs:
           filters: |
             generator:
               - '*.py'
+              - 'Dockerfile'
+              - 'dependencies/**'
+              - '.github/workflows/**'
               - 'auto-publish-versions.env'
               - 'tests/**'
 
@@ -125,7 +128,7 @@ jobs:
 
   publish:
     needs: [check, changes]
-    # Runtime packaging and workflow-only updates run checks without publishing.
+    # All generator, runtime, and CI dependency changes publish after checks pass.
     if: ${{ vars.SBOM_PUBLISH_ENABLED == 'true' && ((github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.changes.outputs.generator == 'true') || (github.event_name == 'workflow_dispatch' && (inputs.publish || (inputs.publish_latest && github.ref == 'refs/heads/main')))) }}
     runs-on: ubuntu-26.04
     permissions:
