@@ -9,14 +9,33 @@ The main consumer is [cnpg-extensions](https://github.com/cnpg-extensions), whic
 uses it for PostgreSQL extension images. Any compatible BuildKit build can use
 the published scanner image without checking out this repository.
 
+## Compatibility
+
+This project is designed to be fully compatible with
+[cloudnative-pg/postgres-containers](https://github.com/cloudnative-pg/postgres-containers).
+The goal is for SBOMs and provenance to have the same formats and presentation,
+to be generated with the same tools wherever possible, and for users to use the
+exact same commands to inspect, extract, verify, and report on them wherever
+possible. Compatibility with that project is a design requirement for changes
+to the generator and its integration.
+
+This means preserving Syft's SPDX conventions, using BuildKit's standard SBOM
+attestations and provenance, and retaining the familiar Docker Buildx, Cosign,
+Grype, and Grant workflows. Image references, signing identities, source
+repositories, and inventory contents naturally vary by publisher and image.
+The generator scopes package evidence to the shipped payload; consumer build
+workflows generate provenance and signatures. Full compatibility therefore
+includes those workflows as well as the scanner.
+
 ## How it works
 
 
 The builder scan follows [BuildKit's default Syft generator](https://github.com/docker/buildkit-syft-scanner/blob/master/internal/target.go)
-to keep inventory behavior aligned with upstream. The generator scopes those
+to keep inventory behavior aligned with that scanner and the compatibility
+goal above. The generator scopes those
 results to files shipped in the final scratch image, applies any custom
 augmentation, and validates the resulting SPDX document. Review scan alignment
-when updating Syft or the upstream generator.
+when updating Syft or BuildKit's default scanner.
 
 ```mermaid
 %%{init: {"htmlLabels": false}}%%

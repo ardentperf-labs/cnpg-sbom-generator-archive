@@ -1,18 +1,22 @@
-# Upstream workarounds
+# Dependency workarounds
 
-Tracking the CloudNativePG upstream project is a high-priority goal. This register
-covers intentional downstream workarounds and compatibility adaptations; choices
-inherited from upstream do not require separate justification here.
+This register records dependency workarounds and adaptations needed to preserve
+the [compatibility goal](README.md#compatibility) with
+[cloudnative-pg/postgres-containers](https://github.com/cloudnative-pg/postgres-containers):
+the same SBOM and provenance formats, the same tools wherever possible, and the
+same user commands wherever possible.
 
 On dependency updates, check the linked issue, pull request, or release contract,
 verify the replacement, and remove temporary measures and their entries together
-when they are no longer needed. Some entries describe packaging adaptations
-rather than pending upstream bug fixes. Where no upstream issue is linked, say so
-instead of implying that a fix is scheduled. Last reviewed: 2026-10-19.
+when they are no longer needed. Name the responsible dependency explicitly and
+record any compatibility impact. Some entries describe packaging adaptations
+rather than pending bug fixes. Where no issue is linked, say so instead of
+implying that a fix is scheduled. Dependency status below was last reviewed on
+2026-10-19.
 
 ## Renovate: Debian security package lookups
 
-- **Upstream:** [issue #44330](https://github.com/renovatebot/renovate/issues/44330)
+- **Renovate tracking:** [issue #44330](https://github.com/renovatebot/renovate/issues/44330)
   and [PR #35865](https://github.com/renovatebot/renovate/pull/35865), both open.
 - **Problem:** the native `deb` datasource requests `Packages.gz`, but Bookworm
   security indexes are published as `Packages.xz`. Renovate skips the failed
@@ -39,7 +43,7 @@ instead of implying that a fix is scheduled. Last reviewed: 2026-10-19.
 
 ## Syft: readability of hash-based license references
 
-- **Upstream:** [issue #3527: Unable to classify complex licenses](https://github.com/anchore/syft/issues/3527).
+- **Syft tracking:** [issue #3527: Unable to classify complex licenses](https://github.com/anchore/syft/issues/3527).
   This [comment](https://github.com/anchore/syft/issues/3527#issuecomment-6295475239)
   discusses the usability of hash-based results.
   [PR #5448](https://github.com/anchore/syft/pull/5448), currently open, proposes
@@ -56,8 +60,8 @@ instead of implying that a fix is scheduled. Last reviewed: 2026-10-19.
   proposes `LicenseRef-Possible-<ID>-<hash>` names containing candidate license
   IDs and a shortened source-text hash. These remain custom references, not
   assertions of standard SPDX licenses. Complex notices may still need manual
-  review, and scanner accuracy remains an upstream Syft concern.
-- **Revisit when:** a released Syft version includes the upstream usability
+  review, and scanner accuracy remains a Syft concern.
+- **Revisit when:** a released Syft version includes the license-reference usability
   improvement. Upgrade the pin and check how candidate references and their
   extracted text appear in SPDX and Grant, then update the checksum-based
   reading guidance as appropriate.

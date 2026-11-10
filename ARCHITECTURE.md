@@ -19,14 +19,35 @@ packages and their relationships, and passes through Syft package identities,
 license references, and extracted license text. It updates file paths, IDs, and
 checksums, repairs relationships, and recalculates package verification codes for
 the shipped subset. Original copyright notices remain intact. Hash-based license
-references can be difficult to interpret; see the [upstream usability work](WORKAROUNDS.md#syft-readability-of-hash-based-license-references)
+references can be difficult to interpret; see the [Syft license-reference usability work](WORKAROUNDS.md#syft-readability-of-hash-based-license-references)
 and [checksum-based notice retrieval](README.md#retrieve-an-original-notice).
 
 Builder scans should mirror BuildKit's default Syft generator as closely as
-possible. Review the [Syft call](generator.py) against the upstream settings
+possible. Review the [Syft call](generator.py) against the BuildKit scanner settings
 linked there: scan base path, source alias, `image,file` cataloger defaults, and
 added `sbom-cataloger`. Tests exercise installed packages, embedded SBOMs, and
 exclusion of source-only Go dependencies.
+
+## Compatibility contract
+
+The reference project is
+[cloudnative-pg/postgres-containers](https://github.com/cloudnative-pg/postgres-containers),
+as described in the [compatibility goal](README.md#compatibility). Preserve the
+same SBOM and provenance formats and user-facing structure, use the same
+generation tools as far as possible, and keep inspection and verification
+commands interchangeable apart from image and publisher parameters.
+
+When changing scanner dependencies, SPDX composition, attestation packaging, or
+release workflows, compare the resulting documents and commands with that
+project. Check Docker Buildx SBOM extraction and provenance inspection, Cosign
+verification, and Grype and Grant reporting. For consumers that publish separate
+signed SLSA provenance, also compare its generation and verification workflow.
+Record any necessary differences and their compatibility impact.
+
+The existing integration tests cover BuildKit/SPDX/Grype/Grant behavior. They do
+not establish complete parity with every image and publishing workflow in the
+reference project; maintainers must assess that compatibility when relevant
+behavior changes.
 
 ## Code map
 

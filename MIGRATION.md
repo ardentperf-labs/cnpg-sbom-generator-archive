@@ -7,7 +7,7 @@ Extracted from `cnpg-extensions/postgres-extensions-containers` commit
 The generator, dependency pins, tests, and fixtures are preserved. Its former
 `sbom-generator/` directory is now the repository root. Release build context,
 workflow paths, documentation, and Renovate scope are adjusted for that layout.
-This repository retains the upstream Apache-2.0 license.
+This repository retains the source repository's Apache-2.0 license.
 
 ## Staging
 
