@@ -88,16 +88,26 @@ license evidence. The core generator has no Cargo or PGRX processing dependency.
 The [fixture hook](tests/integration/fixture/augment_spdx.py) demonstrates adding
 a package that Grant can report.
 
-## Local checks
+## Development
 
-From the repository root:
+Build the scanner and run its unit tests from the repository root:
 
 ```bash
-docker build -t cnpg-sbom-generator:local .
+docker buildx build --load --tag cnpg-sbom-generator:local .
 docker run --rm --entrypoint python3 \
   --volume "$PWD:/workspace:ro" --workdir /workspace \
   cnpg-sbom-generator:local -m unittest discover -s tests
+```
 
+CI builds and tests on native AMD64 and ARM64 runners. Integration checks exercise
+real BuildKit attestations, SPDX validation, package ownership, custom hooks,
+Grype, and Grant.
+
+### Validate an extracted SBOM
+
+After building the local scanner image:
+
+```bash
 # Extract an SPDX document for the validator check below.
 IMAGE=ghcr.io/cnpg-extensions/pgsphere@sha256:54e6f0b0a9d9e4c80db8c6edcac98b451159c1fbaa91e429a92d4978f593518d
 docker buildx imagetools inspect "$IMAGE" \
@@ -117,16 +127,93 @@ exits nonzero on invalid output. Native AMD64 and ARM64 CI checks also build the
 scanner and exercise a real BuildKit attestation, Debian notice ownership, hook
 augmentation, Grype distribution detection, and Grant license reporting.
 
-See the [user and release guide](README.md) for inspection and publication commands.
+See the [README](README.md#inspect-an-image) for image inspection commands.
 
-## Release promotion
+## Generator release and test builds
 
-The generator image itself includes BuildKit's default SBOM and detailed
-provenance, and the workflow signs its checked digest with Cosign. This does not
-use the extension images' separate SLSA reusable workflow.
+`ghcr.io/cnpg-extensions/cnpg-sbom-generator:latest` identifies the checked generator
+published from `main`; `:test` identifies the most recent checked manual test
+publication. These are moving tags. Consumers pin a tag **and its image digest**,
+so moving a tag does not silently change an extension build. `sha-<full-commit>`
+tags retain individual builds; there are no major/minor releases.
+
+### Publication
+
+Publication requires the repository variable `SBOM_PUBLISH_ENABLED=true`.
+The workflow publishes to `ghcr.io/<repository-owner>/cnpg-sbom-generator`.
+When publication is disabled, checks still run. With publication enabled:
+
+| Trigger | Result |
+| --- | --- |
+| Pull request | Checks only |
+| Push to `main` changing root Python files, `auto-publish-versions.env`, or `tests/**` | Publish or reuse commit image; promote the checked digest to `latest` |
+| Push to `main` changing only `Dockerfile` or `dependencies/**` | Checks only |
+| Workflow-only push to `main`, including Grype/Grant version bumps | Checks only |
+| Manual dispatch, `publish=false`, `publish_latest=false` | Checks only |
+| Manual dispatch, `publish=true`, `publish_latest=false` | Publish or reuse commit image; promote to `test` |
+| Manual dispatch on `main`, `publish_latest=true` | Force a checked publication to `latest`, including runtime maintenance |
+
+[The workflow](.github/workflows/sbom-generator.yml) runs unit and
+BuildKit/SPDX/Grype/Grant checks on native AMD64 and ARM64 runners, publishes a
+two-platform image, verifies its platform configurations and source labels, and
+smoke-tests the published digest on AMD64 before promotion. The generator image
+includes per-platform BuildKit `mode=max` provenance and a default-scanner SPDX
+SBOM. The publish job signs the checked image index with Cosign before promotion;
+this binds the platform images and their attestations to the publishing workflow.
+This does not provide `slsa-verifier` verification for the generator itself.
+
+Publication is serialized. Failed checks leave aliases unchanged; manual test
+publication never moves `latest`. [release.py](release.py) reuses commit tags and
+verifies alias digests. A dependency rebuild requires a new commit.
+
+### Release promotion
 
 The publish job is serialized. Once its digest passes checks, a `main` push
 updates `latest` even if unrelated commits have since advanced `main`.
 `release.py` verifies the immutable commit tag and promoted alias against the
 checked digest. GitHub does not guarantee queue order, so serialization alone
 does not enforce source-commit order for publications.
+
+### Testing from a branch
+
+From a checkout of this repository, push a generator change on a branch named `sbom-license-update`
+and publish its test image:
+
+```bash
+git switch -c sbom-license-update
+# Make and commit the generator change.
+git push origin sbom-license-update
+
+gh workflow run sbom-generator.yml \
+  --ref sbom-license-update -f publish=true
+
+gh run list \
+  --workflow sbom-generator.yml --branch sbom-license-update --limit 1
+```
+
+Take the checked `test@sha256:…` reference from the successful run summary and pin
+it in a temporary consumer branch. Run the affected extension builds before
+accepting the update. Keep test pins out of stable consumers.
+
+### Update consumers
+
+When a checked publication advances `latest`, update the pinned digest in
+consumer builds and run their tests. Consumers can configure Renovate to track
+`latest@sha256:…` references and merge digest updates after their checks pass.
+
+### Dependency maintenance
+
+Renovate tracks the Python base-image digest, which covers its bundled Debian
+packages and pip. Additional Debian packages are tracked in architecture-specific
+`dependencies/debian-*.txt` files, grouped with that digest.
+`auto-publish-versions.env` pins Syft; the Dockerfile pins the `spdx-tools` Python
+dependency used for SPDX conformance validation. Renovate tracks both versions. Non-major generator
+updates automerge after their required checks pass; major updates require manual
+merging. Keep the Python base on Bookworm to match the Debian dependency lists.
+New Debian dependencies must also be added to both architecture lists.
+The image revision label identifies the generator source commit. The SPDX
+document retains Syft's original name, creators, and license metadata.
+
+To roll back, restore the previous checked consumer digest and hold updates until
+fixed. Retain the corresponding commit images.
+
