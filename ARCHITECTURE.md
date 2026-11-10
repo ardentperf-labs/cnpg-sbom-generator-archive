@@ -216,4 +216,3 @@ document retains Syft's original name, creators, and license metadata.
 
 To roll back, restore the previous checked consumer digest and hold updates until
 fixed. Retain the corresponding commit images.
-
