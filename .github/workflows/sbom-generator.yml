@@ -52,7 +52,6 @@ jobs:
               - 'Dockerfile'
               - 'dependencies/**'
               - '.github/workflows/**'
-              - 'auto-publish-versions.env'
               - 'tests/**'
 
   check:

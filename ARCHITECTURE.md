@@ -146,7 +146,7 @@ When publication is disabled, checks still run. With publication enabled:
 | Trigger | Result |
 | --- | --- |
 | Pull request | Checks only |
-| Push to `main` changing root Python files, `Dockerfile`, `dependencies/**`, `auto-publish-versions.env`, `tests/**`, or `.github/workflows/**` | Publish or reuse commit image; promote the checked digest to `latest` |
+| Push to `main` changing root Python files, `Dockerfile`, `dependencies/**`, `tests/**`, or `.github/workflows/**` | Publish or reuse commit image; promote the checked digest to `latest` |
 | Documentation-only or Renovate-configuration-only push to `main` | Checks only |
 | Manual dispatch, `publish=false`, `publish_latest=false` | Checks only |
 | Manual dispatch, `publish=true`, `publish_latest=false` | Publish or reuse commit image; promote to `test` |
@@ -205,8 +205,8 @@ consumer builds and run their tests. Consumers can configure Renovate to track
 Renovate tracks the Python base-image digest, which covers its bundled Debian
 packages and pip. Additional Debian packages are tracked in architecture-specific
 `dependencies/debian-*.txt` files.
-`auto-publish-versions.env` pins Syft; the Dockerfile pins the `spdx-tools` Python
-dependency used for SPDX conformance validation. Renovate also tracks CI actions,
+The Dockerfile pins Syft and the `spdx-tools` Python dependency used for SPDX
+conformance validation. Renovate also tracks CI actions,
 runners, and test tools.
 
 All tracked dependencies share one **SBOM generator dependencies** PR, including

@@ -4,13 +4,13 @@
 FROM python:3.15-slim-bookworm@sha256:96599df822d0e1c6bb700014a05c7f3c8cabc6e0f7ff3c4f9f69cee033b4b5d9
 
 ARG TARGETARCH
+# renovate: datasource=github-releases depName=anchore/syft versioning=semver
+ARG SYFT_VERSION=1.57.1
 # renovate: datasource=pypi depName=spdx-tools versioning=pep440
 ARG SPDX_TOOLS_VERSION=0.8.5
-COPY auto-publish-versions.env /tmp/auto-publish-versions.env
 COPY dependencies/ /tmp/dependencies/
 
-RUN . /tmp/auto-publish-versions.env \
-    && apt-get update \
+RUN apt-get update \
     && xargs apt-get install --no-install-recommends -y < "/tmp/dependencies/debian-${TARGETARCH}.txt" \
     && rm -rf /var/lib/apt/lists/* \
     && curl --fail --silent --show-error --location \
