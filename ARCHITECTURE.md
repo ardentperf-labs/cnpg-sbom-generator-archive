@@ -1,11 +1,11 @@
-# SBOM generator reviewer guide
+# Architecture and implementation
 
 The final image is built `FROM scratch`: it retains extension files and libraries,
 but no package database. The generator uses the builder's package evidence to
 identify the files actually shipped, excluding packages with no matched files.
 It runs as a BuildKit scanner; its tools are not added to the extension image.
 
-See [How it works](GUIDE.md#how-it-works) for the complete architecture diagram.
+See [How it works](README.md#how-it-works) for the complete architecture diagram.
 
 Files are copied to different locations in the scratch image: for example,
 `/usr/share/doc/gcc-12-base/copyright` becomes `/licenses/gcc-12-base/copyright`.
@@ -20,7 +20,7 @@ license references, and extracted license text. It updates file paths, IDs, and
 checksums, repairs relationships, and recalculates package verification codes for
 the shipped subset. Original copyright notices remain intact. Hash-based license
 references can be difficult to interpret; see the [upstream usability work](WORKAROUNDS.md#syft-readability-of-hash-based-license-references)
-and [checksum-based notice retrieval](GUIDE.md#retrieve-an-original-notice).
+and [checksum-based notice retrieval](README.md#retrieve-an-original-notice).
 
 Builder scans should mirror BuildKit's default Syft generator as closely as
 possible. Review the [Syft call](generator.py) against the upstream settings
@@ -28,7 +28,7 @@ linked there: scan base path, source alias, `image,file` cataloger defaults, and
 added `sbom-cataloger`. Tests exercise installed packages, embedded SBOMs, and
 exclusion of source-only Go dependencies.
 
-## Where to review
+## Code map
 
 | Area | Entry points |
 | --- | --- |
@@ -37,18 +37,15 @@ exclusion of source-only Go dependencies.
 | Optional hook and its context | [hooks.py](hooks.py) |
 | Final SPDX conformance check | [spdx_validation.py](spdx_validation.py), [explicit SPDX Tools dependency](Dockerfile) |
 | Scanner image and dependencies | [Dockerfile](Dockerfile) |
-| Extension integration | [consumer integration](GUIDE.md#consumer-integration) |
+| Extension integration | [consumer integration](README.md#consumer-integration) |
 | Generator checks, publication, and digest updates | [sbom-generator.yml](.github/workflows/sbom-generator.yml), [release.py](release.py), [renovate.json](renovate.json) |
 | Unit checks and real BuildKit/SPDX/Grype/Grant fixture | [tests](tests), [integration](tests/integration) |
 
-CI selects the scanner and inserts `ARG BUILDKIT_SBOM_SCAN_STAGE=builder` into
-the Dockerfile so BuildKit exposes the builder stage. The scanner is pinned to
-the checked official image digest in `bake_targets.yml`. Ordinary local Bake builds use the
-default scanner when `sbom_generator` is empty. BuildKit produces detailed provenance (`mode=max`);
-the SLSA reusable workflow adds signed provenance for each published index.
-Testing provenance gates production copying; production provenance is generated at the destination.
-The generator wraps its SPDX in an in-toto statement; BuildKit attaches it to the
-image. Signing and SLSA provenance are handled separately by the workflows.
+Consumers expose the `builder` stage with
+`ARG BUILDKIT_SBOM_SCAN_STAGE=builder` and select the scanner image through
+BuildKit's SBOM attestation option. The generator wraps its SPDX document in an
+in-toto statement; BuildKit attaches it to the output image. Consumer image
+signing and any separate SLSA provenance are handled by the consumer's workflows.
 
 ## Downstream augmentation
 
@@ -91,7 +88,7 @@ docker run --rm --entrypoint python3 --volume "$PWD:/workspace:ro" \
 ```
 
 Delete `pgsphere.spdx.json` after the check, or supply another extracted
-SBOM at that path. See the [user guide](GUIDE.md#verify-the-image-and-extract-its-sbom)
+SBOM at that path. See the [user guide](README.md#verify-the-image-and-extract-its-sbom)
 for publisher verification.
 
 The validator accepts extracted SPDX or the generator's in-toto statement and
@@ -99,7 +96,7 @@ exits nonzero on invalid output. Native AMD64 and ARM64 CI checks also build the
 scanner and exercise a real BuildKit attestation, Debian notice ownership, hook
 augmentation, Grype distribution detection, and Grant license reporting.
 
-See the [user and release guide](GUIDE.md) for inspection and publication commands.
+See the [user and release guide](README.md) for inspection and publication commands.
 
 ## Release promotion
 

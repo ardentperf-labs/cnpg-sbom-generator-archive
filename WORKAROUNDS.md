@@ -51,7 +51,7 @@ instead of implying that a fix is scheduled. Last reviewed: 2026-10-19.
 - **Current approach:** the SBOM generator passes through Syft's license
   references and extracted text while scoping package and file records to the
   shipped payload. Original notices are shipped in `/licenses`. Users can start with a checksum in Grant and retrieve the
-  original notice. See [reading license results](GUIDE.md#reading-license-results).
+  original notice. See [reading license results](README.md#reading-license-results).
 - **Limits:** a hash identifies text; it does not explain its terms. PR #5448
   proposes `LicenseRef-Possible-<ID>-<hash>` names containing candidate license
   IDs and a shortened source-text hash. These remain custom references, not
